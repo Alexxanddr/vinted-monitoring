@@ -1,0 +1,27 @@
+services:
+  monitor:
+    build: .
+    init: true
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      VM_TRANSPORT: http
+      VM_HOST: 0.0.0.0
+      VM_DATABASE: /data/monitor.sqlite3
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - monitor-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    stop_grace_period: 30s
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  monitor-data:
