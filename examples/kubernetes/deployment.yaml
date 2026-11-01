@@ -27,7 +27,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: monitor
-          image: REGISTRY/OWNER/vinted-monitoring:0.1.0
+          image: ghcr.io/alexxanddr/vinted-monitoring:latest
           envFrom:
             - configMapRef:
                 name: vinted-monitoring

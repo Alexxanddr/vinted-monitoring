@@ -16,7 +16,7 @@ python3 scripts/container_check.py
 
 Update `uv.lock` when changing dependencies and regenerate the hashed requirements file. The MCP SDK is deliberately constrained to the inspected 1.x line. `vinted-api-kit` is pinned to 1.3.1 because its private transport seam is guarded to disable authentication retries and validate response envelopes. Tests mock only that seam and exercise the real public SDK search path; do not replace them with mocks of `search_items`. Build backend downloads are separate from the locked runtime dependencies. No dependency license ownership is transferred; inspect license metadata when updating. Current runtime dependencies use permissive licenses (including the SDK MIT, httpx BSD-3-Clause and transitive cryptography Apache-2.0/BSD-3-Clause); retain notices when redistributing dependency artifacts.
 
-Tests use synthetic listings, mocked HTTP and a fake destination; no Telegram messages are sent. Container checks disable external networking, use a temporary volume and remove their own containers/volume. CI must not have real Telegram or Vinted credentials. Live checks are never part of CI:
+Tests use synthetic listings, mocked HTTP and a fake destination; no Telegram messages are sent. Container checks disable external networking, use a temporary volume and remove their own containers/volume. CI must not have real Telegram or Vinted credentials. Pushes to master publish GHCR images only after checks; native amd64 and arm64 builds each pass the container smoke test before a multi-platform latest/commit tag is created. Pull requests cannot publish. Live checks are never part of CI:
 
 ```sh
 # Only after explicit permission for this concrete live read:

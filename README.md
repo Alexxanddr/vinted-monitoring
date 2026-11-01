@@ -27,10 +27,13 @@ The example `.env` uses shell-compatible assignments. Docker Compose reads it di
 ```sh
 cp .env.example .env
 # Configure local secrets, then:
-docker compose up --build -d
+docker compose pull
+docker compose up -d --no-build
 docker compose logs --tail=50
 curl -fsS http://127.0.0.1:8000/health/ready
 ```
+
+The published image is `ghcr.io/alexxanddr/vinted-monitoring:latest` for Linux amd64 and arm64. Each native image passes the container/MCP/persistence smoke check before publication. To build from source instead, run `docker compose up --build -d`. For pinned deployments choose the `sha-<full-commit>` tag or an image digest rather than the moving `latest` tag.
 
 Compose publishes only loopback and keeps SQLite in `monitor-data`. Never run `docker compose down -v` unless intentionally deleting all state. The container runs as UID 10001. Only one process may open a state directory; do not start a stdio copy against an HTTP service's database.
 

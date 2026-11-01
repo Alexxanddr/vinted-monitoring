@@ -51,4 +51,6 @@ docker tag vinted-monitoring:0.1.0 REGISTRY/OWNER/vinted-monitoring:0.1.0
 docker push REGISTRY/OWNER/vinted-monitoring:0.1.0
 ```
 
-No image has been published. Only the locally tested container architecture is claimed; cross-platform images require separate builds and smoke checks. Never bake `.env`, state or personal rollout plans into an image.
+GitHub Actions publishes `ghcr.io/alexxanddr/vinted-monitoring:latest` and `sha-<full-commit>` after successful checks on `master`. Linux amd64 and arm64 images are built and smoke-tested on native runners, then combined under those multi-platform tags. Pull requests never publish. Forks derive their registry path from their own GitHub repository, need Packages write permission, and must configure package visibility separately before anonymous pulls work. No registry credentials are required to pull the public upstream image. See [GitHub Container registry documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+
+Never bake `.env`, state or personal rollout plans into an image. No platforms beyond Linux amd64/arm64 are published.

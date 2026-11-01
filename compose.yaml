@@ -1,5 +1,6 @@
 services:
   monitor:
+    image: ghcr.io/alexxanddr/vinted-monitoring:latest
     build: .
     init: true
     restart: unless-stopped

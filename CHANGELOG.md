@@ -6,3 +6,4 @@
 - Added MCP stdio and authenticated Streamable HTTP, generic deployment examples and distributable Hermes skill.
 - Added conservative paginated coverage, silent atomic baselines, global ID/destination suppression and durable block suspension.
 - Completed limited live SDK checks for search, filters, order parameters, page 2, authenticated MCP, silent baseline/rescan and container HTTP on 2026-11-01. Real Telegram delivery and long-term reliability remain unverified.
+- Added tested native Linux amd64/arm64 GHCR images and automatic publication after successful master checks.
