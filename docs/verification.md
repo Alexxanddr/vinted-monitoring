@@ -2,7 +2,7 @@
 
 Development checks on 2026-11-01; these are observations, not promises about a future upstream response.
 
-- Python 3.12 offline suite: 34 passing tests. Coverage includes silent/atomic baseline and transaction rollback, restart persistence, overlapping watches, filter edits, same/new IDs, duplicate/moving pages, exhausted recovery budget, explicit empty versus malformed/error envelopes, strict prices/URLs, real vinted-api-kit search/parameter mapping and pre-retry HEAD/GET guards, 401/403 suspension, 429/cooldown and timeout retries, Telegram failures, before/after-send crash ambiguity, process/async locking, migration, stdio round trip, HTTP authentication and MCP validation.
+- Python 3.12 offline suite: 39 passing tests. Coverage includes silent/atomic baseline and transaction rollback, restart persistence, overlapping watches, filter edits, same/new IDs, duplicate/moving pages, exhausted recovery budget, explicit empty versus malformed/error envelopes, strict prices/URLs, real vinted-api-kit search/parameter mapping and pre-retry HEAD/GET guards, 401/403 suspension, 429/cooldown and timeout retries, Telegram failures, before/after-send crash ambiguity, process/async locking, migration, stdio round trip, HTTP authentication and MCP validation.
 - An end-to-end test exercises HTTP MCP, the real Vinted SDK, background polling, two overlapping watches, mocked Telegram delivery, edits and restart on the same SQLite database. Only outbound network responses are mocked; the production scheduler and persistence are used.
 - Pre-publication `pip-audit` of the locked runtime requirements reported no known vulnerabilities at check time; this is an advisory database check, not a security audit of the application.
 - Ruff lint and formatting passed. `uv.lock` validated offline; exported hashed runtime requirements match the lock.
@@ -20,3 +20,16 @@ Development checks on 2026-11-01; these are observations, not promises about a f
 - Remote CI status is available in the repository's GitHub Actions checks. No release, cluster rollout, MCPHub registration or installed Hermes skill update is included. MIT is supplied as the default license for the previously empty project.
 
 See [operations](operations.md) for the coverage and delivery limits and [configuration](configuration.md) for the concrete post-installation discovery procedure. The standalone live check is opt-in and excluded from ordinary CI.
+
+## Pagination regression check — 2026-11-02
+
+A production watch had no successful baseline because the collector rejected an ID
+repeated across pages. The original behavior was reproduced by a failing test.
+Live read-only sampling of the same query found 50/50/50/48 rows, one repeated
+ID, and 197 unique listings. A first-page recheck may change order/membership
+while containing only IDs already collected from the complete page walk.
+
+The candidate collector completed this real scan without opening the service
+database or sending Telegram messages. Regression tests cover silent atomic
+baseline completion with overlap, within-page duplicates, covered-ID reshuffling,
+new recheck IDs, stalled full pages and raw-page budget exhaustion.

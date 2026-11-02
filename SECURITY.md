@@ -16,7 +16,7 @@ To report a vulnerability, use the hosting platform's private vulnerability repo
 - **Invalid Host header:** configure `VM_ALLOWED_HOSTS` with the exact MCPHub destination host/port.
 - **Vinted 401/403 or challenge:** requests are suspended durably. Investigate access rules; see the explicit clearance procedure in [operations](docs/operations.md). Do not keep retrying.
 - **Schema mismatch:** integration drift, filtered price mismatch or unexpected data; baseline remains incomplete. Inspect only sanitized field types in an explicitly authorized diagnostic, never convert the response into an empty search.
-- **Page budget exhausted / moving pages:** no baseline or scan state advanced. Narrow filters; increasing budget increases upstream traffic and still does not prove exhaustive coverage.
+- **Page budget exhausted / stalled or incomplete moving pages:** no baseline or scan state advanced. Repeated IDs alone are deduplicated and do not cause failure. Narrow filters; increasing budget increases upstream traffic and still does not prove exhaustive coverage.
 - **Telegram backlog:** inspect authenticated status and local SQLite queue attempts/error/due without dumping credentials. Check bot permissions/destination privately. No receiving webhook or getUpdates poll is necessary for normal sending.
 - **Database already owned:** stop the other owner. Do not delete a live lock file or start a second replica.
 - **Healthy probes but no alerts:** probes are process health only. Check baseline, freshness, suspension, pause and backlog separately.

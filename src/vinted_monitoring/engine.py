@@ -26,21 +26,21 @@ class Engine:
 
     async def collect(self, query):
         items = {}
-        first_ids = None
         # Scan to an actual short page. Never stop at one known/max ID: ordering can move.
         for page in range(1, self.settings.max_pages + 1):
             batch = await self.vinted.page(query, page, self.settings.page_size)
-            ids = [item.id for item in batch]
-            if len(ids) != len(set(ids)) or set(ids) & items.keys():
-                raise Incomplete("moving pagination: duplicate IDs; no state advanced")
-            if first_ids is None:
-                first_ids = ids
+            if (
+                page > 1
+                and len(batch) == self.settings.page_size
+                and all(item.id in items for item in batch)
+            ):
+                raise Incomplete("pagination made no progress; no state advanced")
             for item in batch:
-                items[item.id] = item
+                items.setdefault(item.id, item)
             if len(batch) < self.settings.page_size:
                 if page > 1:
                     check = await self.vinted.page(query, 1, self.settings.page_size)
-                    if [item.id for item in check] != first_ids:
+                    if any(item.id not in items for item in check):
                         raise Incomplete("moving first page; no state advanced")
                 return list(items.values())
         raise Incomplete("page budget exhausted; no state advanced; narrow the search")

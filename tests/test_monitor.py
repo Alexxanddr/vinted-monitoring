@@ -158,8 +158,7 @@ async def test_incomplete_baseline_is_atomic_and_gap_does_not_advance(setup):
 async def test_duplicate_pages_and_moving_first_page(setup):
     engine, catalog, _ = setup
     catalog.pages = {1: [item(3), item(2)], 2: [item(2)]}
-    with pytest.raises(Incomplete, match="duplicate"):
-        await engine.collect(Query(text="x"))
+    assert {item.id for item in await engine.collect(Query(text="x"))} == {"2", "3"}
     original = catalog.page
     calls = 0
 
@@ -637,3 +636,53 @@ async def test_real_sdk_search_builds_request_and_preserves_transport(monkeypatc
     assert all(c[2]["timeout"] == 7 and not c[2]["allow_redirects"] for c in calls)
     assert all(c[2]["impersonate"] == "chrome" for c in calls)
     assert client._session.session.proxies == {"all": ""}
+
+
+async def test_overlapping_catalog_pages_complete_silent_baseline(setup):
+    engine, catalog, sent = setup
+    watch_id = create(engine)
+    engine.settings.page_size = 3
+    catalog.pages = {1: [item(4), item(3), item(2)], 2: [item(3), item(1)]}
+    await scan(engine, watch_id)
+    watch = engine.store.watch(watch_id)
+    assert watch["baseline"] == 1, watch["error"]
+    assert watch["last_success"] is not None
+    assert engine.store.db.execute("SELECT count(*) FROM seen").fetchone()[0] == 4
+    await engine.deliver()
+    assert not sent
+
+
+async def test_reordered_first_page_with_already_collected_ids_is_complete(setup):
+    engine, catalog, _ = setup
+    original = catalog.page
+    calls = 0
+    catalog.pages = {1: [item(3), item(2)], 2: [item(1)]}
+
+    async def reordered(*args):
+        nonlocal calls
+        calls += 1
+        return [item(1), item(3)] if calls == 3 else await original(*args)
+
+    catalog.page = reordered
+    assert {i.id for i in await engine.collect(Query(text="x"))} == {"1", "2", "3"}
+
+
+async def test_repeated_full_page_cannot_complete_baseline(setup):
+    engine, catalog, _ = setup
+    engine.settings.max_pages = 3
+    catalog.pages = {1: [item(2), item(1)], 2: [item(2), item(1)], 3: []}
+    with pytest.raises(Incomplete, match="no progress"):
+        await engine.collect(Query(text="x"))
+
+
+async def test_duplicate_ids_do_not_make_a_full_last_page_complete(setup):
+    engine, catalog, _ = setup
+    catalog.pages = {1: [item(3), item(2)], 2: [item(2), item(1)]}
+    with pytest.raises(Incomplete, match="budget"):
+        await engine.collect(Query(text="x"))
+
+
+async def test_duplicate_ids_within_page_are_deduplicated(setup):
+    engine, catalog, _ = setup
+    catalog.pages = {1: [item(2), item(2)], 2: [item(1)]}
+    assert {i.id for i in await engine.collect(Query(text="x"))} == {"1", "2"}
